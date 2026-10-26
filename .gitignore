@@ -1,0 +1,23 @@
+# Dependencies
+/node_modules/
+
+# Next.js build output
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Local environment and keys
+.env
+.env*.local
+
+# Local tooling and caches
+/.nodecache/
+.cache/
+*.log
+
+# Vercel
+.vercel/
+
+# OS metadata
+.DS_Store
