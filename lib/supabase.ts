@@ -1,10 +1,10 @@
-import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 const ADMIN_COOKIE = 'np_admin';
-const ADMIN_REFRESH_COOKIE = 'np_admin_refresh';
+const ADMIN_MAX_AGE = 60 * 60 * 24 * 30;
 const BROWSER_COOKIE = 'np_browser';
 const BROWSER_MAX_AGE = 60 * 60 * 24 * 365;
-const ADMIN_REFRESH_MAX_AGE = 60 * 60 * 24 * 7;
 
 function required(name: string): string {
   const value = process.env[name];
@@ -66,71 +66,42 @@ export function browserCookie(id: string): string {
   return `${BROWSER_COOKIE}=${id}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${BROWSER_MAX_AGE}`;
 }
 
-function sessionCookies(session: Session): string[] {
-  const accessAge = Math.max(Number(session.expires_in) || 3600, 60);
-  return [
-    `${ADMIN_COOKIE}=${session.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${accessAge}`,
-    `${ADMIN_REFRESH_COOKIE}=${session.refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${ADMIN_REFRESH_MAX_AGE}`,
-  ];
+/** Stable session token derived from the admin password. */
+function adminToken(password: string): string {
+  return createHash('sha256').update(`npvote-admin:${password}`).digest('hex');
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+function adminCookie(token: string): string {
+  return `${ADMIN_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${ADMIN_MAX_AGE}`;
 }
 
 export function clearedCookies(): string[] {
-  const clear = 'Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
-  return [`${ADMIN_COOKIE}=; ${clear}`, `${ADMIN_REFRESH_COOKIE}=; ${clear}`];
+  return [`${ADMIN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`];
 }
 
-export type AdminSession = { email: string; cookies: string[] };
-
-function allowedAdmin(): string | undefined {
-  const value = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  return value || undefined;
-}
+export type AdminSession = { cookies: string[] };
 
 /**
- * Verifies the Supabase session cookie and matches it against ADMIN_EMAIL.
- * Returns null for anonymous users, unknown accounts and expired sessions.
+ * Checks the browser's admin cookie against a token derived from the
+ * server-side ADMIN_PASSWORD. Returns null when the cookie is missing or wrong.
  */
-export async function adminSession(request: Request): Promise<AdminSession | null> {
-  const allowed = allowedAdmin();
-  if (!allowed) return null;
-
-  const client = db();
-  const access = cookie(request, ADMIN_COOKIE);
-  const refresh = cookie(request, ADMIN_REFRESH_COOKIE);
-  const cookies: string[] = [];
-  let email: string | undefined;
-
-  if (access) {
-    const { data } = await client.auth.getUser(access);
-    email = data.user?.email?.toLowerCase();
-  }
-
-  if (!email && refresh) {
-    const { data } = await client.auth.refreshSession({ refresh_token: refresh });
-    if (data.session && data.user?.email) {
-      email = data.user.email.toLowerCase();
-      cookies.push(...sessionCookies(data.session));
-    }
-  }
-
-  if (email !== allowed) return null;
-  return { email, cookies };
+export function adminSession(request: Request): AdminSession | null {
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password) return null;
+  const value = cookie(request, ADMIN_COOKIE);
+  return value && safeEqual(value, adminToken(password)) ? { cookies: [] } : null;
 }
 
-/** Signs an admin in with email/password and returns the cookies to set. */
-export async function signIn(
-  email: string,
-  password: string,
-): Promise<{ cookies: string[] } | { error: string }> {
-  const allowed = allowedAdmin();
-  if (!allowed) return { error: 'Akun admin belum dikonfigurasi di server.' };
-
-  const { data, error } = await db().auth.signInWithPassword({ email, password });
-  if (error || !data.session || !data.user) {
-    return { error: 'Email atau kata sandi salah.' };
-  }
-  if ((data.user.email ?? '').toLowerCase() !== allowed) {
-    return { error: 'Akun ini tidak diizinkan sebagai admin.' };
-  }
-  return { cookies: sessionCookies(data.session) };
+/** Compares the submitted password with ADMIN_PASSWORD and returns the cookie. */
+export function adminLogin(password: string): { cookies: string[] } | { error: string } {
+  const expected = process.env.ADMIN_PASSWORD;
+  if (!expected) return { error: 'Kata sandi admin belum dikonfigurasi di server.' };
+  if (!safeEqual(password, expected)) return { error: 'Kata sandi salah.' };
+  return { cookies: [adminCookie(adminToken(expected))] };
 }

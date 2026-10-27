@@ -9,7 +9,6 @@ type Mode = 'loading' | 'login' | 'ready';
 export default function Admin() {
   const [mode, setMode] = useState<Mode>('loading');
   const [stats, setStats] = useState<Stats | null>(null);
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -61,7 +60,7 @@ export default function Admin() {
       const response = await fetch('/api/admin/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ password }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Login gagal.');
@@ -208,7 +207,7 @@ export default function Admin() {
         <section className="panel login">
           <p className="eyebrow">RUANG PANITIA</p>
           <h1>Masuk admin</h1>
-          <p className="hint">Hanya akun panitia yang dapat membuka dan menutup voting.</p>
+          <p className="hint">Masukkan kata sandi panitia untuk membuka dan menutup voting.</p>
           {error && (
             <p role="alert" className="error">
               {error}
@@ -216,17 +215,7 @@ export default function Admin() {
           )}
           <form onSubmit={login}>
             <label>
-              Email
-              <input
-                type="email"
-                required
-                autoComplete="username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
-            <label>
-              Kata sandi
+              Kata sandi panitia
               <input
                 type="password"
                 required
