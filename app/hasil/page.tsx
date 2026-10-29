@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-type Row = { id: number; name: string; photo: string; total: number; pct: number };
+type Row = {
+  id: number;
+  name: string;
+  photo: string;
+  actualVotes: number;
+  displayValue: number;
+  pct: number;
+};
 type Result = { open: boolean; total: number; top: Row[] };
 
 export default function Results() {
@@ -114,7 +121,7 @@ export default function Results() {
                       <div className="track">
                         <div style={{ width: c.pct + '%' }} />
                       </div>
-                      <small>{c.total.toLocaleString('id-ID')} suara</small>
+                      <small>{c.displayValue.toLocaleString('id-ID')} suara</small>
                     </>
                   ) : (
                     <small className="secret">Jumlah suara dirahasiakan sampai voting ditutup.</small>
