@@ -119,6 +119,33 @@ export default function Admin() {
     }
   }
 
+  async function adjust(id: number, delta: 1 | -1) {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch('/api/admin/adjust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, delta }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Gagal mengubah suara.');
+      setNotice(
+        (delta === 1 ? 'Suara ditambahkan ke ' : 'Suara dihapus dari ') +
+          'peserta ' +
+          String(id).padStart(2, '0') +
+          '.',
+      );
+      await load();
+    } catch (e) {
+      setError((e as Error).message || 'Gagal mengubah suara.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function saveName(id: number) {
     const name = (drafts[id] ?? '').trim();
     if (!name || busy) return;
@@ -389,9 +416,39 @@ export default function Admin() {
       <section className="panel danger">
         <h2>Alat pengujian</h2>
         <p className="hint">
-          Menghapus semua suara agar setiap perangkat dapat memilih lagi. Nama dan foto peserta tidak
-          terhapus. Gunakan hanya saat latihan.
+          Gunakan hanya saat latihan. Tombol − dan + menambah atau menghapus satu suara peserta agar halaman
+          hasil dapat diuji tanpa menunggu pemilih; suara ini tercatat seperti suara asli. Tombol di bawah
+          menghapus semua suara agar setiap perangkat dapat memilih lagi (nama dan foto peserta tidak
+          terhapus).
         </p>
+        <div className="debuggrid">
+          {(stats?.counts ?? []).map((c) => (
+            <div className="debugrow" key={c.id}>
+              <span>
+                <b className="badge">{String(c.id).padStart(2, '0')}</b> {c.name}
+              </span>
+              <div className="debugbuttons">
+                <button
+                  className="secondary mini"
+                  aria-label={'Kurangi satu suara peserta ' + String(c.id).padStart(2, '0')}
+                  disabled={busy || c.total === 0}
+                  onClick={() => adjust(c.id, -1)}
+                >
+                  −
+                </button>
+                <strong>{c.total}</strong>
+                <button
+                  className="secondary mini"
+                  aria-label={'Tambah satu suara peserta ' + String(c.id).padStart(2, '0')}
+                  disabled={busy}
+                  onClick={() => adjust(c.id, 1)}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
         <button
           className="danger"
           disabled={busy || (stats?.total ?? 0) === 0}

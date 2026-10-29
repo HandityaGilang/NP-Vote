@@ -164,7 +164,6 @@ function Confetti() {
       color: colors[Math.floor(Math.random() * colors.length)],
     }));
 
-    let frame = 0;
     let raf = 0;
     const draw = () => {
       context.clearRect(0, 0, width, height);
@@ -183,9 +182,8 @@ function Confetti() {
         context.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size * 0.6);
         context.restore();
       }
-      frame += 1;
-      if (frame < 60 * 8) raf = requestAnimationFrame(draw);
-      else context.clearRect(0, 0, width, height);
+      // Keeps falling pieces forever, so the celebration never stops.
+      raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
 
