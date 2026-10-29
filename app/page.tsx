@@ -189,27 +189,26 @@ export default function Vote() {
 function Card({ c, children }: { c: Candidate; children?: React.ReactNode }) {
   return (
     <article className="candidate">
-      <div className="candidate-info">
-        {c.photo ? (
-          <img
-            src={c.photo}
-            alt={'Foto ' + c.name}
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        ) : (
-          <div className="portrait" aria-label="Foto belum tersedia">
-            <svg viewBox="0 0 100 100" aria-hidden="true">
-              <circle cx="50" cy="34" r="18" />
-              <path d="M15 93a35 35 0 0 1 70 0" />
-            </svg>
-          </div>
-        )}
-        <div>
-          <span className="number">{String(c.id).padStart(2, '0')}</span>
-          <h2>{c.name}</h2>
+      {c.photo ? (
+        <img
+          className="candidate-photo"
+          src={c.photo}
+          alt={'Foto ' + c.name}
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      ) : (
+        <div className="candidate-photo portrait" aria-label="Foto belum tersedia">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="34" r="18" />
+            <path d="M15 93a35 35 0 0 1 70 0" />
+          </svg>
         </div>
+      )}
+      <div className="candidate-info">
+        <span className="number">{String(c.id).padStart(2, '0')}</span>
+        <h2>{c.name}</h2>
       </div>
       {children}
     </article>
