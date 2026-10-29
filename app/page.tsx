@@ -78,7 +78,7 @@ export default function Vote() {
           <img className="mark" src="/NP.png" alt="NP" />
           <span>Vote</span>
         </a>
-        <span className="tag">Setiap pilihan berarti</span>
+        <span className="tag">Funtastic Sakti</span>
       </header>
       <main className="voter">
         {!event ? (
