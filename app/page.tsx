@@ -17,6 +17,7 @@ export default function Vote() {
   const [selected, setSelected] = useState<Candidate | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -38,6 +39,13 @@ export default function Vote() {
     window.scrollTo(0, 0);
     document.getElementById('step-title')?.focus();
   }, [selected, event?.voted]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   async function send() {
     if (!selected || busy) return;
@@ -94,6 +102,9 @@ export default function Vote() {
             </h1>
             <p>Anda telah memilih:</p>
             <Card c={chosen} first />
+            <a className="resultslink" href="/hasil">
+              Lihat hasil <span aria-hidden="true">→</span>
+            </a>
             <p>Anda boleh menutup halaman ini.</p>
           </section>
         ) : selected ? (
@@ -149,7 +160,7 @@ export default function Vote() {
               favorit Anda?
             </h1>
             <p className="intro">
-              Pilih satu peserta. Geser layar ke atas untuk melihat peserta lainnya.
+              Pilih satu peserta. Geser layar ke bawah untuk melihat peserta lainnya.
             </p>
             {error && (
               <p role="alert" className="error">
@@ -170,6 +181,10 @@ export default function Vote() {
                   </button>
                 </Card>
               ))}
+            </div>
+            <div className={'scrollcue' + (scrolled ? ' hide' : '')} aria-hidden="true">
+              Geser ke bawah
+              <span className="arrow">↓</span>
             </div>
           </>
         )}

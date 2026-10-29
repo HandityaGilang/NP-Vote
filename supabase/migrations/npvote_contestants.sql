@@ -2,9 +2,9 @@
 -- Run once in Supabase Dashboard → SQL Editor, after npvote_schema.sql.
 
 -- Names and photos are editable from /admin.
--- `id` is fixed at 1..14 to match `votes.candidate` and `cast_vote()`.
+-- `id` is fixed at 1..15 to match `votes.candidate` and `cast_vote()`.
 create table if not exists public.contestants (
-  id smallint primary key check (id between 1 and 14),
+  id smallint primary key check (id between 1 and 15),
   name text not null check (char_length(name) between 1 and 40),
   photo text not null default '',
   updated_at timestamptz not null default now()
@@ -12,7 +12,7 @@ create table if not exists public.contestants (
 
 insert into public.contestants (id, name)
 select g, 'Peserta ' || lpad(g::text, 2, '0')
-from generate_series(1, 14) as g
+from generate_series(1, 15) as g
 on conflict (id) do nothing;
 
 alter table public.contestants enable row level security;

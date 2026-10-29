@@ -8,7 +8,7 @@ export const event = {
  * Fixed number of contestants. Contestant ids are 1..candidateCount.
  * Names and photos live in the `contestants` table and are edited from /admin.
  *
- * Keep this in sync with the `candidate between 1 and 14` check constraint in
+ * Keep this in sync with the `candidate between 1 and 15` check constraint in
  * supabase/migrations/npvote_schema.sql.
  */
-export const candidateCount = 14;
+export const candidateCount = 15;
