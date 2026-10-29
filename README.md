@@ -1,6 +1,6 @@
 # NPVote
 
-Mobile-first voting site for a one-time event: 12 contestants, ~500 voters.
+Mobile-first voting site for a one-time event: 14 contestants, ~500 voters.
 Public voting needs no login; a small admin dashboard opens/closes voting and shows live counts.
 
 - Next.js (App Router) + TypeScript + plain CSS
@@ -10,7 +10,7 @@ Public voting needs no login; a small admin dashboard opens/closes voting and sh
 ## How voting works
 
 - Contestant names and photos live in the `contestants` table and are edited from `/admin`.
-  `app/config.ts` keeps only the event labels and the fixed count (12).
+  `app/config.ts` keeps only the event labels and the fixed count (14).
 - Each browser gets an HttpOnly `np_browser` cookie (a UUID). The first vote for that
   cookie is stored; later attempts return the stored vote.
 - Uniqueness is enforced by the `votes.browser` primary key, and `cast_vote()` checks
@@ -26,8 +26,12 @@ Public voting needs no login; a small admin dashboard opens/closes voting and sh
 2. Open **SQL Editor** and run, in order:
    - `supabase/migrations/npvote_schema.sql` (settings, votes, `cast_vote()`).
    - `supabase/migrations/npvote_contestants.sql` (contestants table + public `photos`
-     storage bucket, seeded with "Peserta 01".."Peserta 12").
-3. Copy `.env.example` to `.env.local` and fill in:
+     storage bucket, seeded with "Peserta 01".."Peserta 14").
+3. **Already set up with 12 contestants?** Run
+   `supabase/migrations/npvote_contestants14.sql` once instead of steps 2 again. It widens
+   the id checks, adds contestants 13 and 14, and replaces `cast_vote()`. Existing votes,
+   names and photos are kept.
+4. Copy `.env.example` to `.env.local` and fill in:
    - `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from
      **Project Settings → API**.
    - `ADMIN_PASSWORD`: the password the panitia types on `/admin`. No Supabase Auth
@@ -92,5 +96,5 @@ curl -i -X POST http://localhost:3000/api/admin -H "Content-Type: application/js
 ## Deliberately out of scope
 
 No rate limiting, no audit log, no tie-break rule (equal totals fall back to the lower
-contestant number). The `candidate between 1 and 12` check in SQL and `candidateCount` in
+contestant number). The `candidate between 1 and 14` check in SQL and `candidateCount` in
 `app/config.ts` must stay in sync.

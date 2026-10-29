@@ -11,7 +11,7 @@ create table if not exists public.settings (
 -- One row per browser. `browser` is the primary key, so the first vote wins.
 create table if not exists public.votes (
   browser uuid primary key,
-  candidate smallint not null check (candidate between 1 and 12),
+  candidate smallint not null check (candidate between 1 and 14),
   created timestamptz not null default now()
 );
 
@@ -55,7 +55,7 @@ begin
     return jsonb_build_object('status', 'invalid');
   end if;
 
-  if p_candidate is null or p_candidate < 1 or p_candidate > 12 then
+  if p_candidate is null or p_candidate < 1 or p_candidate > 14 then
     return jsonb_build_object('status', 'invalid');
   end if;
 

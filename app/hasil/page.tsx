@@ -50,7 +50,10 @@ export default function Results() {
           <span className={'status ' + (data?.open ? 'live' : '')}>
             {data?.open ? '● Voting masih dibuka' : 'Voting ditutup'}
           </span>
-          <span>{(data?.total ?? 0).toLocaleString('id-ID')} suara</span>
+          {/* Counts stay hidden until the admin closes voting. */}
+          <span>
+            {closed ? `${(data?.total ?? 0).toLocaleString('id-ID')} suara` : 'Jumlah suara dirahasiakan'}
+          </span>
         </div>
 
         {error && (
@@ -107,14 +110,7 @@ export default function Results() {
                       <small>{c.total.toLocaleString('id-ID')} suara</small>
                     </>
                   ) : (
-                    <>
-                      <strong className="count">
-                        {c.total.toLocaleString('id-ID')} <small>suara</small>
-                      </strong>
-                      <div className="track">
-                        <div style={{ width: (leader ? (c.total / leader.total) * 100 : 0) + '%' }} />
-                      </div>
-                    </>
+                    <small className="secret">Jumlah suara dirahasiakan sampai voting ditutup.</small>
                   )}
                 </article>
               ))}
@@ -122,7 +118,7 @@ export default function Results() {
             <p className="hint">
               {closed
                 ? 'Voting sudah ditutup. Hasil ini tidak berubah lagi.'
-                : 'Diperbarui tiap 5 detik. Persentase ditampilkan setelah voting ditutup.'}
+                : 'Diperbarui tiap 5 detik. Jumlah dan persentase suara ditampilkan setelah voting ditutup.'}
             </p>
           </>
         )}
