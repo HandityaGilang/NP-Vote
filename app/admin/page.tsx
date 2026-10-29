@@ -153,7 +153,7 @@ export default function Admin() {
     setError('');
     setNotice('');
     try {
-      const blob = await compress(file);
+      const { blob, width, height } = await compress(file);
       const form = new FormData();
       form.append('id', String(id));
       form.append('photo', blob, 'foto.jpg');
@@ -165,7 +165,12 @@ export default function Admin() {
           ? { ...current, counts: current.counts.map((c) => (c.id === id ? { ...c, photo: data.photo } : c)) }
           : current,
       );
-      setNotice('Foto peserta ' + String(id).padStart(2, '0') + ' diperbarui.');
+      const label = 'Peserta ' + String(id).padStart(2, '0');
+      setNotice(
+        Math.max(width, height) < 1200
+          ? `Foto ${label} diperbarui. Sumbernya hanya ${width}×${height} px sehingga tetap terlihat kabur — unggah foto asli minimal 900×1200 px.`
+          : 'Foto ' + label + ' diperbarui.',
+      );
     } catch (e) {
       setError((e as Error).message || 'Gagal mengunggah foto.');
     } finally {
@@ -331,8 +336,8 @@ export default function Admin() {
       <section className="panel">
         <h2>Data peserta</h2>
         <p className="hint">
-          Ubah nama dan foto peserta. Foto dikecilkan otomatis di perangkat ini sebelum diunggah (JPEG, maks
-          3 MB).
+          Ubah nama dan foto peserta. Gunakan foto asli berukuran minimal 900×1200 px (potret) agar hasilnya
+          tajam. Foto dikecilkan otomatis di perangkat ini saat diunggah (JPEG, maks 3 MB).
         </p>
         <div className="editgrid">
           {(stats?.counts ?? []).map((c) => (
@@ -417,19 +422,39 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Shrink a photo in the browser so uploads stay small and cheap to store. */
-async function compress(file: File): Promise<Blob> {
+/**
+ * Longest edge kept when saving. A 3:4 portrait therefore stores up to
+ * 1200x1600 px, which covers the voting card (about 470 CSS px wide, i.e.
+ * ~1400 device px on a 3x phone) without the browser enlarging anything.
+ */
+const MAX_EDGE = 1600;
+const QUALITY = 0.88;
+
+/**
+ * Shrink a photo in the browser before upload. Photos are never enlarged, and a
+ * JPEG that already fits the budget is passed through untouched so it is not
+ * compressed a second time. Returns the source pixel size so the caller can
+ * warn when the original is too small to ever look sharp.
+ */
+async function compress(file: File): Promise<{ blob: Blob; width: number; height: number }> {
   const bitmap = await createImageBitmap(file);
-  const max = 900;
-  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+  const { width, height } = bitmap;
+  const longest = Math.max(width, height);
+
+  if (file.type === 'image/jpeg' && longest <= MAX_EDGE && file.size <= 2 * 1024 * 1024) {
+    bitmap.close();
+    return { blob: file, width, height };
+  }
+
+  const scale = Math.min(1, MAX_EDGE / longest);
   const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Peramban ini tidak dapat mengolah foto.');
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', QUALITY));
   if (!blob) throw new Error('Gagal memproses foto.');
-  return blob;
+  return { blob, width, height };
 }

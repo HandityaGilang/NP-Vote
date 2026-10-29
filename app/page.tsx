@@ -93,7 +93,7 @@ export default function Vote() {
               sudah masuk.
             </h1>
             <p>Anda telah memilih:</p>
-            <Card c={chosen} />
+            <Card c={chosen} first />
             <p>Anda boleh menutup halaman ini.</p>
           </section>
         ) : selected ? (
@@ -113,7 +113,7 @@ export default function Vote() {
               Periksa pilihan Anda
             </h1>
             <p>Pastikan nomor dan nama sudah benar.</p>
-            <Card c={selected} />
+            <Card c={selected} first />
             <p className="hint">Pilihan yang sudah dikirim tidak dapat diubah.</p>
             {error && (
               <p role="alert" className="error">
@@ -162,8 +162,8 @@ export default function Vote() {
               </aside>
             )}
             <div className="cards">
-              {event.candidates.map((c) => (
-                <Card key={c.id} c={c}>
+              {event.candidates.map((c, index) => (
+                <Card key={c.id} c={c} first={index === 0}>
                   <button className="primary" disabled={!event.open} onClick={() => setSelected(c)}>
                     Pilih peserta {String(c.id).padStart(2, '0')}{' '}
                     <span aria-hidden="true">→</span>
@@ -186,7 +186,7 @@ export default function Vote() {
   );
 }
 
-function Card({ c, children }: { c: Candidate; children?: React.ReactNode }) {
+function Card({ c, first = false, children }: { c: Candidate; first?: boolean; children?: React.ReactNode }) {
   return (
     <article className="candidate">
       {c.photo ? (
@@ -194,6 +194,9 @@ function Card({ c, children }: { c: Candidate; children?: React.ReactNode }) {
           className="candidate-photo"
           src={c.photo}
           alt={'Foto ' + c.name}
+          loading={first ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchPriority={first ? 'high' : 'auto'}
           onError={(e) => {
             e.currentTarget.style.display = 'none';
           }}
