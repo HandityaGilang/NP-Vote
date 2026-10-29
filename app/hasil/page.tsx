@@ -56,13 +56,9 @@ export default function Results() {
 
       <main className="stagebody">
         <h1 className="stagetitle">PESERTA FAVORIT</h1>
-        <p className="stagesub">Top 3 Pilihan Anda</p>
-        {data != null && (
-          <p className="stagelead">
-            {closed
-              ? `${total.toLocaleString('id-ID')} suara · voting telah ditutup`
-              : 'Jumlah suara dirahasiakan sampai voting ditutup.'}
-          </p>
+        <p className="stagesub">Top 3 Favorit</p>
+        {closed && (
+          <p className="stagelead">{`${total.toLocaleString('id-ID')} suara · voting telah ditutup`}</p>
         )}
 
         {error && (
@@ -123,9 +119,7 @@ export default function Results() {
                       </div>
                       <small>{c.displayValue.toLocaleString('id-ID')} suara</small>
                     </>
-                  ) : (
-                    <small className="secret">Jumlah suara dirahasiakan sampai voting ditutup.</small>
-                  )}
+                  ) : null}
                 </article>
               );
             })}
