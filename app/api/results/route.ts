@@ -3,7 +3,7 @@ import { presentationValues } from '@/lib/presentation';
 
 export const dynamic = 'force-dynamic';
 
-const TOP = 3;
+const TOP = 5;
 
 /**
  * Public, read-only results feed used by /hasil.

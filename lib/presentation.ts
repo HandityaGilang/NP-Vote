@@ -1,5 +1,5 @@
 /**
- * Presentation values for the public Top 3.
+ * Presentation values for the public Top 5.
  *
  * These numbers exist only to make the final podium look balanced on the
  * results page. They are never written to the database, never influence the
@@ -17,24 +17,28 @@ function hasDuplicate(values: number[]): boolean {
  * Returns the values displayed on the results page.
  *
  * `actual` is ordered by rank (highest first) and holds only the contestants
- * that already qualified for the Top 3, based on real votes.
+ * that already qualified for the Top 5, based on real votes.
  *
  *  - rank 1 always shows its real total;
  *  - rank 2 and rank 3 show the larger of their real total and a share of the
  *    leader's total (0.835 / 0.625), so real values above the floor stay as-is;
+ *  - rank 4 and rank 5 always show their real total, and so does any further
+ *    rank, because the floors only cover the top three;
  *  - the calculation is deterministic and free of randomness;
  *  - when the real totals contain a tie, or when the rounded values would
  *    create a tie that did not exist, the real totals are returned for the
- *    whole Top 3.
+ *    whole list.
  */
 export function presentationValues(actual: number[]): number[] {
   if (actual.length === 0) return [];
   if (hasDuplicate(actual)) return actual.slice();
 
   const leader = actual[0];
-  const shown = actual.map((votes, index) =>
-    index === 0 ? votes : Math.max(votes, Math.round(leader * FLOOR[index])),
-  );
+  const shown = actual.map((votes, index) => {
+    const floor = FLOOR[index];
+    if (index === 0 || floor === undefined) return votes;
+    return Math.max(votes, Math.round(leader * floor));
+  });
 
   return hasDuplicate(shown) ? actual.slice() : shown;
 }

@@ -56,7 +56,7 @@ export default function Results() {
 
       <main className="stagebody">
         <h1 className="stagetitle">PESERTA FAVORIT</h1>
-        <p className="stagesub">Top 3 Favorit</p>
+        <p className="stagesub">Top 5 Favorit</p>
         {closed && (
           <p className="stagelead">{`${total.toLocaleString('id-ID')} suara · voting telah ditutup`}</p>
         )}
